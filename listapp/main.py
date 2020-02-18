@@ -6,9 +6,10 @@ from bson.json_util import dumps
 
 main = Blueprint('main', __name__)
 
+
 @main.route('/', methods=['GET'])
 def hello():
-  return 'hello nalgas'
+  return '<h1>HELLO NALGAS</h1>'
   
  
 #GET ALL LISTS
@@ -20,8 +21,8 @@ def getLists():
   return dumps(result)
 
 #GET LIST BY NAME
-@main.route("/list/<name>", methods=['GET'])
-def getListByName(name):
+@main.route("/list", methods=['GET'])
+def getListByName():
   query = request.json['q']
 
   user_list = mongo.db.nalgaslist
@@ -37,25 +38,25 @@ def postNewList():
 
   user_list = mongo.db.nalgaslist
   user_list.insert({"name" : list_name, "items" : list_items})
-  return '<h1>Added a List!</h1>'
+  return f"Added a new list: '{list_name}'"
   
 #POST UPDATED LIST
-@main.route("/list/<name>", methods=['POST'])
-def postUpdatedList(name):
-  query = request.json["q"]
-  list_items = request.json["items"]
-
+@main.route("/list", methods=['POST'])
+def postUpdatedList():
+  list_to_update = request.json["name"]
+  items_to_update = request.json["items"]
+  
   user_list = mongo.db.nalgaslist
-  result = user_list.find(query)
+  result = user_list.update_one({"name": list_to_update}, {"$set": {"items": items_to_update}})
 
-  result.insert({"items" : list_items})
-
-  return dumps(result)
+  return f"List '{list_to_update}' updated"
 
 #DELETE LIST
-@main.route("/list/<type>", methods=['DELETE'])
-def deleteUpdatedList(type):
-  user_list = mongo.db.nalgaslist
-  result = user_list.delete_many({'type':'grocery'})
+@main.route("/list", methods=['DELETE'])
+def deleteUpdatedList():
+  list_to_delete = request.json["name"]
 
-  return 'List deleted'
+  user_list = mongo.db.nalgaslist
+  result = user_list.delete_one({"name" : list_to_delete})
+
+  return f"List '{list_to_delete}' deleted"
